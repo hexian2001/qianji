@@ -42,7 +42,7 @@ dev = [
 ]
 
 [project.scripts]
-qianji = "qianji.cli:sync_main"
+qianji = "qianji.cli_direct:sync_main"
 qianji-server = "qianji.server:main"
 qianji-mcp = "qianji.mcp:sync_main"
 qianji-setup-mcp = "qianji.mcp_setup:sync_main"
