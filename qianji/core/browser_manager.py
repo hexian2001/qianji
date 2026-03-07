@@ -53,12 +53,6 @@ class BrowserManager:
         # 确定可执行路径
         executable_path = profile.executable_path or self.config.executable_path
         
-        # 创建临时用户数据目录
-        if profile.user_data_dir:
-            self._user_data_dir = profile.user_data_dir
-        else:
-            self._user_data_dir = tempfile.mkdtemp(prefix="qianji_profile_")
-        
         # 启动浏览器
         try:
             if executable_path:
@@ -75,10 +69,9 @@ class BrowserManager:
                     args=browser_args,
                 )
             
-            # 创建上下文
+            # 创建上下文 - 不使用 user_data_dir 参数
             self.context = await self.browser.new_context(
                 viewport={"width": 1280, "height": 720},
-                user_data_dir=self._user_data_dir if profile.user_data_dir else None,
             )
             
             self._running = True
@@ -124,13 +117,6 @@ class BrowserManager:
             except:
                 pass
             self.playwright = None
-        
-        # 清理临时用户数据目录
-        if self._user_data_dir and not self._profile.user_data_dir:
-            try:
-                shutil.rmtree(self._user_data_dir, ignore_errors=True)
-            except:
-                pass
         
         self._running = False
         self._profile = None
