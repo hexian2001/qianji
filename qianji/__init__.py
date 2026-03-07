@@ -7,7 +7,6 @@ qianji v2 - 完全复刻 OpenClaw Browser
 
 from .server import BrowserServer
 from .core.browser_manager import BrowserManager
-from .core.profiles import ProfileManager
 from .models.config import BrowserConfig, ProfileConfig
 from .models.snapshot import Snapshot, ElementRef
 
@@ -15,7 +14,6 @@ __version__ = "2.0.0"
 __all__ = [
     "BrowserServer",
     "BrowserManager", 
-    "ProfileManager",
     "BrowserConfig",
     "ProfileConfig",
     "Snapshot",
