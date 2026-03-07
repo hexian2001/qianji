@@ -1,0 +1,75 @@
+[project]
+name = "qianji"
+version = "2.0.0"
+description = "Universal Browser Automation for AI - 100% OpenClaw Compatible"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "qianji", email = "qianji@example.com"}
+]
+keywords = ["browser", "automation", "ai", "playwright", "mcp", "openclaw"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+]
+
+dependencies = [
+    "playwright>=1.40.0",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+    "httpx>=0.25.0",
+    "websockets>=12.0",
+    "python-multipart>=0.0.6",
+    "aiofiles>=23.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "mypy>=1.7.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+qianji = "qianji.cli:main"
+qianji-server = "qianji.server:main"
+qianji-mcp = "qianji.mcp:main"
+qianji-setup-mcp = "qianji.mcp_setup:main"
+
+[project.urls]
+Homepage = "https://github.com/hexian2001/qianji"
+Documentation = "https://github.com/hexian2001/qianji#readme"
+Issues = "https://github.com/hexian2001/qianji/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["qianji"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
