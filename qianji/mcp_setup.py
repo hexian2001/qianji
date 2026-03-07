@@ -498,3 +498,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def sync_main():
+    """同步入口函数 - 用于命令行调用"""
+    main()

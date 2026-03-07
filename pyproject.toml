@@ -42,10 +42,10 @@ dev = [
 ]
 
 [project.scripts]
-qianji = "qianji.cli:main"
+qianji = "qianji.cli:sync_main"
 qianji-server = "qianji.server:main"
-qianji-mcp = "qianji.mcp:main"
-qianji-setup-mcp = "qianji.mcp_setup:main"
+qianji-mcp = "qianji.mcp:sync_main"
+qianji-setup-mcp = "qianji.mcp_setup:sync_main"
 
 [project.urls]
 Homepage = "https://github.com/hexian2001/qianji"
