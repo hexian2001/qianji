@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "qianji": {
+      "command": "nohup /root/miniconda3/envs/py312/bin/python",
+      "args": [
+        "/root/ezisall/qianji/qianji/mcp_wrapper.py",
+        "--port",
+        "18796",
+        "--mcp"
+      ],
+      "env": {
+        "PYTHONPATH": "/root/ezisall/qianji",
+        "QIANJI_CONTROL_PORT": "18796",
+        "QIANJI_IDLE_TIMEOUT": "3600",
+        "QIANJI_MAX_LIFETIME": "3600"
+      }
+    },
+    "agent-browser": {
+      "command": "npx",
+      "args": [
+        "agent-browser"
+      ],
+      "env": {}
+    }
+  }
+}

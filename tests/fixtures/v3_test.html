@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Qianji V3 Integration Test</title>
+</head>
+<body>
+    <h1>Qianji V3 Test Page</h1>
+    
+    <button id="alert-btn" onclick="alert('Hello from Alert')">Trigger Alert</button>
+    <button id="confirm-btn" onclick="confirm('Confirm this action?')">Trigger Confirm</button>
+    <button id="prompt-btn" onclick="const val = prompt('Enter something:'); document.getElementById('prompt-result').innerText = val;">Trigger Prompt</button>
+    <div id="prompt-result"></div>
+
+    <hr>
+    <h3>Iframe Test</h3>
+    <iframe id="test-iframe" src="iframe_content.html" width="400" height="200"></iframe>
+
+    <hr>
+    <h3>File Upload Test</h3>
+    <input type="file" id="file-input">
+    <button id="custom-file-btn" onclick="document.getElementById('file-input').click()">Custom File Dialog</button>
+
+    <hr>
+    <h3>DOM Change Test</h3>
+    <button id="change-dom-btn" onclick="const p = document.createElement('p'); p.innerText = 'New Element'; document.body.appendChild(p);">Add Element</button>
+
+    <hr>
+    <h3>Lots of elements (Truncation Test)</h3>
+    <div id="many-elements"></div>
+    <script>
+        const container = document.getElementById('many-elements');
+        for (let i = 0; i < 200; i++) {
+            const btn = document.createElement('button');
+            btn.innerText = 'Button ' + i;
+            container.appendChild(btn);
+        }
+    </script>
+</body>
+</html>

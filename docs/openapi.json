@@ -1,0 +1,481 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Qianji API",
+    "description": "Universal Browser Automation API - 100% OpenClaw Compatible",
+    "version": "2.0.0",
+    "contact": {
+      "name": "Qianji Team",
+      "url": "https://github.com/hexian2001/qianji/issues"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:18796",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Get server status",
+        "description": "Returns the current status of the qianji server",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "Server status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers": {
+      "get": {
+        "summary": "List all browsers",
+        "description": "Returns a list of all browser instances",
+        "operationId": "listBrowsers",
+        "responses": {
+          "200": {
+            "description": "List of browsers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/start": {
+      "post": {
+        "summary": "Start default browser",
+        "description": "Starts the default browser instance",
+        "operationId": "startBrowser",
+        "parameters": [
+          {
+            "name": "profile",
+            "in": "query",
+            "description": "Profile name to use",
+            "schema": {
+              "type": "string",
+              "default": "default"
+            }
+          },
+          {
+            "name": "headless",
+            "in": "query",
+            "description": "Run in headless mode",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "no_sandbox",
+            "in": "query",
+            "description": "Disable sandbox (for Docker/root)",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Browser started successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/navigate": {
+      "post": {
+        "summary": "Navigate to URL",
+        "description": "Navigates the browser to the specified URL",
+        "operationId": "navigate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NavigateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Navigation successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NavigateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/snapshot": {
+      "post": {
+        "summary": "Get page snapshot",
+        "description": "Captures a snapshot of the current page including interactive elements",
+        "operationId": "getSnapshot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnapshotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Snapshot captured successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/click": {
+      "post": {
+        "summary": "Click element",
+        "description": "Clicks on an element by its reference ID",
+        "operationId": "clickElement",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClickRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Click successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/type": {
+      "post": {
+        "summary": "Type text",
+        "description": "Types text into an input element",
+        "operationId": "typeText",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TypeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Text typed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screenshot": {
+      "post": {
+        "summary": "Take screenshot",
+        "description": "Captures a screenshot of the current page",
+        "operationId": "takeScreenshot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenshotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Screenshot captured successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenshotResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StatusResponse": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the server is enabled"
+          },
+          "running": {
+            "type": "boolean",
+            "description": "Whether a browser is running"
+          },
+          "cdpReady": {
+            "type": "boolean",
+            "description": "Whether CDP is ready"
+          },
+          "profile": {
+            "type": "string",
+            "description": "Current profile name"
+          },
+          "chosenBrowser": {
+            "type": "string",
+            "description": "Selected browser type"
+          }
+        }
+      },
+      "BrowserListResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "totalBrowsers": {
+                "type": "integer"
+              },
+              "runningBrowsers": {
+                "type": "integer"
+              },
+              "totalTabs": {
+                "type": "integer"
+              },
+              "browsers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BrowserInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      "BrowserInfo": {
+        "type": "object",
+        "properties": {
+          "browserId": {
+            "type": "string"
+          },
+          "profileName": {
+            "type": "string"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "tabs": {
+            "type": "integer"
+          }
+        }
+      },
+      "GenericResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "NavigateRequest": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to navigate to"
+          },
+          "browserId": {
+            "type": "string",
+            "description": "Browser instance ID"
+          },
+          "targetId": {
+            "type": "string",
+            "description": "Target tab ID"
+          }
+        }
+      },
+      "NavigateResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "SnapshotRequest": {
+        "type": "object",
+        "properties": {
+          "browserId": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string"
+          }
+        }
+      },
+      "SnapshotResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "Page text content"
+          },
+          "interactive": {
+            "type": "string",
+            "description": "Interactive elements list"
+          }
+        }
+      },
+      "ClickRequest": {
+        "type": "object",
+        "required": ["ref"],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "description": "Element reference ID (e.g., e1)"
+          },
+          "browserId": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string"
+          }
+        }
+      },
+      "TypeRequest": {
+        "type": "object",
+        "required": ["ref", "text"],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "description": "Element reference ID"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text to type"
+          },
+          "submit": {
+            "type": "boolean",
+            "description": "Submit form after typing",
+            "default": false
+          },
+          "browserId": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string"
+          }
+        }
+      },
+      "ScreenshotRequest": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Output file path"
+          },
+          "fullPage": {
+            "type": "boolean",
+            "description": "Capture full page",
+            "default": false
+          },
+          "browserId": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string"
+          }
+        }
+      },
+      "ScreenshotResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,18 +1,18 @@
 """数据模型"""
 
 from .config import BrowserConfig, ProfileConfig
-from .snapshot import Snapshot, ElementRef, SnapshotElement
 from .responses import (
-    NavigateResponse,
-    SnapshotResponse,
     ClickResponse,
-    TypeResponse,
-    ScreenshotResponse,
+    ErrorResponse,
+    NavigateResponse,
     PDFResponse,
+    ScreenshotResponse,
+    SnapshotResponse,
     StatusResponse,
     TabInfo,
-    ErrorResponse,
+    TypeResponse,
 )
+from .snapshot import ElementRef, Snapshot, SnapshotElement
 
 __all__ = [
     "BrowserConfig",

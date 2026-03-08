@@ -1,5 +1,6 @@
 """
-MCP 配置生成器 - 一键配置 Claude Desktop, Cursor 等工具
+MCP 安装脚本
+配置 Claude Desktop 和 Cursor 使用 qianji MCP
 """
 
 import json
@@ -7,499 +8,316 @@ import os
 import platform
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
 
 
-class MCPSetup:
-    """MCP 配置设置工具"""
-    
-    def __init__(self):
-        self.system = platform.system()
-        self.home = Path.home()
-    
-    def get_claude_config_path(self) -> Optional[Path]:
-        """获取 Claude Desktop 配置文件路径"""
-        if self.system == "Darwin":  # macOS
-            return self.home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
-        elif self.system == "Windows":
-            return Path(os.environ.get("APPDATA", "")) / "Claude" / "claude_desktop_config.json"
-        else:  # Linux
-            return self.home / ".config" / "Claude" / "claude_desktop_config.json"
-    
-    def get_cursor_config_path(self) -> Optional[Path]:
-        """获取 Cursor 配置文件路径"""
-        if self.system == "Darwin":
-            return self.home / "Library" / "Application Support" / "Cursor" / "mcp.json"
-        elif self.system == "Windows":
-            return Path(os.environ.get("APPDATA", "")) / "Cursor" / "mcp.json"
-        else:
-            return self.home / ".config" / "Cursor" / "mcp.json"
-    
-    def get_windsurf_config_path(self) -> Optional[Path]:
-        """获取 Windsurf 配置文件路径"""
-        if self.system == "Darwin":
-            return self.home / ".codeium" / "windsurf" / "mcp_config.json"
-        elif self.system == "Windows":
-            return Path(os.environ.get("USERPROFILE", "")) / ".codeium" / "windsurf" / "mcp_config.json"
-        else:
-            return self.home / ".codeium" / "windsurf" / "mcp_config.json"
-    
-    def generate_qianji_mcp_config(self, server_url: str = "http://localhost:18791") -> Dict[str, Any]:
-        """生成 qianji MCP 配置"""
-        return {
-            "command": sys.executable,
-            "args": ["-m", "qianji.mcp", "--server", server_url],
-            "env": {
-                "PYTHONIOENCODING": "utf-8"
-            },
-            "description": "Universal Browser Automation for AI",
+def get_claude_config_path() -> Path:
+    """获取 Claude Desktop 配置路径"""
+    system = platform.system()
+    if system == "Darwin":  # macOS
+        return (
+            Path.home()
+            / "Library"
+            / "Application Support"
+            / "Claude"
+            / "claude_desktop_config.json"
+        )
+    elif system == "Windows":
+        return Path(os.environ.get("APPDATA", "")) / "Claude" / "claude_desktop_config.json"
+    else:  # Linux
+        return Path.home() / ".config" / "Claude" / "claude_desktop_config.json"
+
+
+def get_cursor_config_path() -> Path:
+    """获取 Cursor 配置路径"""
+    system = platform.system()
+    if system == "Darwin":  # macOS
+        return Path.home() / "Library" / "Application Support" / "Cursor" / "mcp.json"
+    elif system == "Windows":
+        return Path(os.environ.get("APPDATA", "")) / "Cursor" / "mcp.json"
+    else:  # Linux
+        return Path.home() / ".config" / "Cursor" / "mcp.json"
+
+
+def get_mcp_server_config(
+    server_url: str = "http://localhost:18796",
+    python_path: str | None = None,
+    auto_start: bool = True,
+    idle_timeout: int | None = None,
+    max_lifetime: int | None = None,
+) -> dict:
+    """生成 MCP 服务器配置
+
+    Args:
+        server_url: qianji 服务器 URL
+        python_path: Python 解释器路径（默认自动检测）
+        auto_start: 是否自动启动服务器（默认 True）
+        idle_timeout: 浏览器空闲超时（秒）
+        max_lifetime: 浏览器最大生命周期（秒）
+    """
+    # 获取 Python 解释器路径
+    if python_path is None:
+        python_path = sys.executable
+
+    project_root = Path(__file__).parent.parent.absolute()
+    wrapper_path = project_root / "qianji" / "mcp_wrapper.py"
+
+    # 构建 args
+    args = [
+        str(wrapper_path),
+        "--port",
+        server_url.split(":")[-1],
+    ]
+
+    # 如果不自动启动，添加 --no-auto-start
+    if not auto_start:
+        args.append("--no-auto-start")
+
+    args.append("--mcp")
+
+    # 构建 env
+    env = {"PYTHONPATH": str(project_root), "QIANJI_CONTROL_PORT": server_url.split(":")[-1]}
+
+    # 添加生命周期配置
+    if idle_timeout is not None:
+        env["QIANJI_IDLE_TIMEOUT"] = str(idle_timeout)
+    if max_lifetime is not None:
+        env["QIANJI_MAX_LIFETIME"] = str(max_lifetime)
+
+    return {"command": python_path, "args": args, "env": env}
+
+
+def setup_claude_mcp(server_url: str = "http://localhost:18796"):
+    """配置 Claude Desktop MCP"""
+    config_path = get_claude_config_path()
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # 读取现有配置
+    config = {}
+    if config_path.exists():
+        try:
+            with open(config_path) as f:
+                config = json.load(f)
+        except json.JSONDecodeError:
+            print(f"Warning: Could not parse existing config at {config_path}")
+            config = {}
+
+    # 确保 mcpServers 存在
+    if "mcpServers" not in config:
+        config["mcpServers"] = {}
+
+    # 添加 qianji MCP 服务器
+    config["mcpServers"]["qianji"] = get_mcp_server_config(server_url)
+
+    # 写入配置
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=2)
+
+    print(f"✓ Claude Desktop MCP configured at: {config_path}")
+    print(f"  Server URL: {server_url}")
+
+
+def setup_cursor_mcp(server_url: str = "http://localhost:18796"):
+    """配置 Cursor MCP"""
+    config_path = get_cursor_config_path()
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # 读取现有配置
+    config = {}
+    if config_path.exists():
+        try:
+            with open(config_path) as f:
+                config = json.load(f)
+        except json.JSONDecodeError:
+            print(f"Warning: Could not parse existing config at {config_path}")
+            config = {}
+
+    # 确保 mcpServers 存在
+    if "mcpServers" not in config:
+        config["mcpServers"] = {}
+
+    # 添加 qianji MCP 服务器
+    config["mcpServers"]["qianji"] = get_mcp_server_config(server_url)
+
+    # 写入配置
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=2)
+
+    print(f"✓ Cursor MCP configured at: {config_path}")
+    print(f"  Server URL: {server_url}")
+
+
+def print_manual_config(server_url: str = "http://localhost:18796", python_path: str | None = None):
+    """打印手动配置说明"""
+    if python_path is None:
+        python_path = sys.executable
+
+    print("\n" + "=" * 60)
+    print("Manual MCP Configuration")
+    print("=" * 60)
+    print("\nAdd the following to your MCP configuration:\n")
+    project_root = Path(__file__).parent.parent.absolute()
+    wrapper_path = project_root / "qianji" / "mcp_wrapper.py"
+
+    config = {
+        "mcpServers": {
+            "qianji": {
+                "command": python_path,
+                "args": [str(wrapper_path), "--port", server_url.split(":")[-1], "--mcp"],
+                "env": {
+                    "PYTHONPATH": str(project_root),
+                    "QIANJI_CONTROL_PORT": server_url.split(":")[-1],
+                },
+            }
         }
-    
-    def setup_claude(self, server_url: str = "http://localhost:18791", dry_run: bool = False) -> str:
-        """配置 Claude Desktop"""
-        config_path = self.get_claude_config_path()
-        if not config_path:
-            return "❌ 无法确定 Claude Desktop 配置路径"
-        
-        # 读取现有配置
-        config = {}
-        if config_path.exists():
-            try:
-                with open(config_path, "r", encoding="utf-8") as f:
-                    config = json.load(f)
-            except Exception as e:
-                return f"❌ 读取配置失败: {e}"
-        
-        # 确保 mcpServers 存在
-        if "mcpServers" not in config:
-            config["mcpServers"] = {}
-        
-        # 添加 qianji
-        config["mcpServers"]["qianji"] = self.generate_qianji_mcp_config(server_url)
-        
-        if dry_run:
-            return f"📋 Claude Desktop 配置预览 ({config_path}):\n{json.dumps(config, indent=2, ensure_ascii=False)}"
-        
-        # 写入配置
-        try:
-            config_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(config_path, "w", encoding="utf-8") as f:
-                json.dump(config, indent=2, fp=f, ensure_ascii=False)
-            return f"✅ Claude Desktop 配置已更新: {config_path}"
-        except Exception as e:
-            return f"❌ 写入配置失败: {e}"
-    
-    def setup_cursor(self, server_url: str = "http://localhost:18791", dry_run: bool = False) -> str:
-        """配置 Cursor"""
-        config_path = self.get_cursor_config_path()
-        if not config_path:
-            return "❌ 无法确定 Cursor 配置路径"
-        
-        # 读取现有配置
-        config = {}
-        if config_path.exists():
-            try:
-                with open(config_path, "r", encoding="utf-8") as f:
-                    config = json.load(f)
-            except Exception as e:
-                return f"❌ 读取配置失败: {e}"
-        
-        # 确保 mcpServers 存在
-        if "mcpServers" not in config:
-            config["mcpServers"] = {}
-        
-        # 添加 qianji
-        config["mcpServers"]["qianji"] = self.generate_qianji_mcp_config(server_url)
-        
-        if dry_run:
-            return f"📋 Cursor 配置预览 ({config_path}):\n{json.dumps(config, indent=2, ensure_ascii=False)}"
-        
-        # 写入配置
-        try:
-            config_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(config_path, "w", encoding="utf-8") as f:
-                json.dump(config, indent=2, fp=f, ensure_ascii=False)
-            return f"✅ Cursor 配置已更新: {config_path}"
-        except Exception as e:
-            return f"❌ 写入配置失败: {e}"
-    
-    def setup_windsurf(self, server_url: str = "http://localhost:18791", dry_run: bool = False) -> str:
-        """配置 Windsurf"""
-        config_path = self.get_windsurf_config_path()
-        if not config_path:
-            return "❌ 无法确定 Windsurf 配置路径"
-        
-        # 读取现有配置
-        config = {}
-        if config_path.exists():
-            try:
-                with open(config_path, "r", encoding="utf-8") as f:
-                    config = json.load(f)
-            except Exception as e:
-                return f"❌ 读取配置失败: {e}"
-        
-        # 确保 mcpServers 存在
-        if "mcpServers" not in config:
-            config["mcpServers"] = {}
-        
-        # 添加 qianji
-        config["mcpServers"]["qianji"] = self.generate_qianji_mcp_config(server_url)
-        
-        if dry_run:
-            return f"📋 Windsurf 配置预览 ({config_path}):\n{json.dumps(config, indent=2, ensure_ascii=False)}"
-        
-        # 写入配置
-        try:
-            config_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(config_path, "w", encoding="utf-8") as f:
-                json.dump(config, indent=2, fp=f, ensure_ascii=False)
-            return f"✅ Windsurf 配置已更新: {config_path}"
-        except Exception as e:
-            return f"❌ 写入配置失败: {e}"
-    
-    def setup_all(self, server_url: str = "http://localhost:18791", dry_run: bool = False) -> str:
-        """配置所有支持的 IDE"""
-        results = []
-        
-        results.append("🎯 Claude Desktop:")
-        results.append(self.setup_claude(server_url, dry_run))
-        results.append("")
-        
-        results.append("🎯 Cursor:")
-        results.append(self.setup_cursor(server_url, dry_run))
-        results.append("")
-        
-        results.append("🎯 Windsurf:")
-        results.append(self.setup_windsurf(server_url, dry_run))
-        results.append("")
-        
-        if not dry_run:
-            results.append("⚠️  请重启 IDE 以使配置生效")
-        
-        return "\n".join(results)
-    
-    def generate_shell_script(self, server_url: str = "http://localhost:18791") -> str:
-        """生成 Shell 配置脚本"""
-        script = f'''#!/bin/bash
-# qianji MCP 配置脚本
-# 一键配置 Claude Desktop, Cursor, Windsurf
+    }
 
-set -e
-
-echo "🔧 配置 qianji MCP..."
-
-# 检测 Python 路径
-PYTHON_PATH="{sys.executable}"
-SERVER_URL="{server_url}"
-
-# 配置 Claude Desktop
-CLAUDE_CONFIG="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    CLAUDE_CONFIG="$HOME/.config/Claude/claude_desktop_config.json"
-elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
-    CLAUDE_CONFIG="$APPDATA/Claude/claude_desktop_config.json"
-fi
-
-if command -v claude &> /dev/null || [ -d "$(dirname "$CLAUDE_CONFIG")" ]; then
-    echo "🎯 配置 Claude Desktop..."
-    mkdir -p "$(dirname "$CLAUDE_CONFIG")"
-    
-    # 读取或创建配置
-    if [ -f "$CLAUDE_CONFIG" ]; then
-        CONFIG=$(cat "$CLAUDE_CONFIG")
-    else
-        CONFIG='{{}}'
-    fi
-    
-    # 使用 Python 更新配置
-    $PYTHON_PATH -c "
-import json
-import sys
-
-config = json.loads('$CONFIG' if '$CONFIG' != '{{}}' else '{{}}')
-if 'mcpServers' not in config:
-    config['mcpServers'] = {{}}
-
-config['mcpServers']['qianji'] = {{
-    'command': '$PYTHON_PATH',
-    'args': ['-m', 'qianji.mcp', '--server', '$SERVER_URL'],
-    'env': {{'PYTHONIOENCODING': 'utf-8'}},
-    'description': 'Universal Browser Automation for AI'
-}}
-
-print(json.dumps(config, indent=2))
-" > "$CLAUDE_CONFIG"
-    
-    echo "✅ Claude Desktop 配置完成: $CLAUDE_CONFIG"
-fi
-
-# 配置 Cursor
-CURSOR_CONFIG="$HOME/Library/Application Support/Cursor/mcp.json"
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    CURSOR_CONFIG="$HOME/.config/Cursor/mcp.json"
-elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
-    CURSOR_CONFIG="$APPDATA/Cursor/mcp.json"
-fi
-
-if command -v cursor &> /dev/null || [ -d "$(dirname "$CURSOR_CONFIG")" ]; then
-    echo "🎯 配置 Cursor..."
-    mkdir -p "$(dirname "$CURSOR_CONFIG")"
-    
-    if [ -f "$CURSOR_CONFIG" ]; then
-        CONFIG=$(cat "$CURSOR_CONFIG")
-    else
-        CONFIG='{{}}'
-    fi
-    
-    $PYTHON_PATH -c "
-import json
-
-config = json.loads('$CONFIG' if '$CONFIG' != '{{}}' else '{{}}')
-if 'mcpServers' not in config:
-    config['mcpServers'] = {{}}
-
-config['mcpServers']['qianji'] = {{
-    'command': '$PYTHON_PATH',
-    'args': ['-m', 'qianji.mcp', '--server', '$SERVER_URL'],
-    'env': {{'PYTHONIOENCODING': 'utf-8'}},
-    'description': 'Universal Browser Automation for AI'
-}}
-
-print(json.dumps(config, indent=2))
-" > "$CURSOR_CONFIG"
-    
-    echo "✅ Cursor 配置完成: $CURSOR_CONFIG"
-fi
-
-# 配置 Windsurf
-WINDSURF_CONFIG="$HOME/.codeium/windsurf/mcp_config.json"
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
-    WINDSURF_CONFIG="$USERPROFILE/.codeium/windsurf/mcp_config.json"
-fi
-
-if command -v windsurf &> /dev/null || [ -d "$(dirname "$WINDSURF_CONFIG")" ]; then
-    echo "🎯 配置 Windsurf..."
-    mkdir -p "$(dirname "$WINDSURF_CONFIG")"
-    
-    if [ -f "$WINDSURF_CONFIG" ]; then
-        CONFIG=$(cat "$WINDSURF_CONFIG")
-    else
-        CONFIG='{{}}'
-    fi
-    
-    $PYTHON_PATH -c "
-import json
-
-config = json.loads('$CONFIG' if '$CONFIG' != '{{}}' else '{{}}')
-if 'mcpServers' not in config:
-    config['mcpServers'] = {{}}
-
-config['mcpServers']['qianji'] = {{
-    'command': '$PYTHON_PATH',
-    'args': ['-m', 'qianji.mcp', '--server', '$SERVER_URL'],
-    'env': {{'PYTHONIOENCODING': 'utf-8'}},
-    'description': 'Universal Browser Automation for AI'
-}}
-
-print(json.dumps(config, indent=2))
-" > "$WINDSURF_CONFIG"
-    
-    echo "✅ Windsurf 配置完成: $WINDSURF_CONFIG"
-fi
-
-echo ""
-echo "🎉 MCP 配置完成！"
-echo "⚠️  请重启 IDE 以使配置生效"
-echo ""
-echo "📖 使用方法:"
-echo "   1. 启动 qianji-server: qianji-server"
-echo "   2. 在 IDE 中启用 qianji MCP 工具"
-echo "   3. 让 AI 使用浏览器自动化功能"
-'''
-        return script
-    
-    def generate_powershell_script(self, server_url: str = "http://localhost:18791") -> str:
-        """生成 PowerShell 配置脚本 (Windows)"""
-        script = f'''
-# qianji MCP 配置脚本 (Windows)
-# 一键配置 Claude Desktop, Cursor, Windsurf
-
-$PYTHON_PATH = "{sys.executable}"
-$SERVER_URL = "{server_url}"
-
-Write-Host "🔧 配置 qianji MCP..." -ForegroundColor Cyan
-
-# 配置 Claude Desktop
-$CLAUDE_CONFIG = "$env:APPDATA\\Claude\\claude_desktop_config.json"
-if (Test-Path (Split-Path $CLAUDE_CONFIG -Parent)) {{
-    Write-Host "🎯 配置 Claude Desktop..." -ForegroundColor Yellow
-    
-    $config = @{{}}
-    if (Test-Path $CLAUDE_CONFIG) {{
-        $config = Get-Content $CLAUDE_CONFIG | ConvertFrom-Json
-    }}
-    
-    if (-not $config.mcpServers) {{
-        $config | Add-Member -NotePropertyName mcpServers -NotePropertyValue @{{}} -Force
-    }}
-    
-    $config.mcpServers.qianji = @{{
-        command = $PYTHON_PATH
-        args = @("-m", "qianji.mcp", "--server", $SERVER_URL)
-        env = @{{ PYTHONIOENCODING = "utf-8" }}
-        description = "Universal Browser Automation for AI"
-    }}
-    
-    $config | ConvertTo-Json -Depth 10 | Set-Content $CLAUDE_CONFIG
-    Write-Host "✅ Claude Desktop 配置完成: $CLAUDE_CONFIG" -ForegroundColor Green
-}}
-
-# 配置 Cursor
-$CURSOR_CONFIG = "$env:APPDATA\\Cursor\\mcp.json"
-if (Test-Path (Split-Path $CURSOR_CONFIG -Parent)) {{
-    Write-Host "🎯 配置 Cursor..." -ForegroundColor Yellow
-    
-    $config = @{{}}
-    if (Test-Path $CURSOR_CONFIG) {{
-        $config = Get-Content $CURSOR_CONFIG | ConvertFrom-Json
-    }}
-    
-    if (-not $config.mcpServers) {{
-        $config | Add-Member -NotePropertyName mcpServers -NotePropertyValue @{{}} -Force
-    }}
-    
-    $config.mcpServers.qianji = @{{
-        command = $PYTHON_PATH
-        args = @("-m", "qianji.mcp", "--server", $SERVER_URL)
-        env = @{{ PYTHONIOENCODING = "utf-8" }}
-        description = "Universal Browser Automation for AI"
-    }}
-    
-    $config | ConvertTo-Json -Depth 10 | Set-Content $CURSOR_CONFIG
-    Write-Host "✅ Cursor 配置完成: $CURSOR_CONFIG" -ForegroundColor Green
-}}
-
-# 配置 Windsurf
-$WINDSURF_CONFIG = "$env:USERPROFILE\\.codeium\\windsurf\\mcp_config.json"
-if (Test-Path (Split-Path $WINDSURF_CONFIG -Parent)) {{
-    Write-Host "🎯 配置 Windsurf..." -ForegroundColor Yellow
-    
-    $config = @{{}}
-    if (Test-Path $WINDSURF_CONFIG) {{
-        $config = Get-Content $WINDSURF_CONFIG | ConvertFrom-Json
-    }}
-    
-    if (-not $config.mcpServers) {{
-        $config | Add-Member -NotePropertyName mcpServers -NotePropertyValue @{{}} -Force
-    }}
-    
-    $config.mcpServers.qianji = @{{
-        command = $PYTHON_PATH
-        args = @("-m", "qianji.mcp", "--server", $SERVER_URL)
-        env = @{{ PYTHONIOENCODING = "utf-8" }}
-        description = "Universal Browser Automation for AI"
-    }}
-    
-    $config | ConvertTo-Json -Depth 10 | Set-Content $WINDSURF_CONFIG
-    Write-Host "✅ Windsurf 配置完成: $WINDSURF_CONFIG" -ForegroundColor Green
-}}
-
-Write-Host ""
-Write-Host "🎉 MCP 配置完成！" -ForegroundColor Green
-Write-Host "⚠️  请重启 IDE 以使配置生效" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "📖 使用方法:" -ForegroundColor Cyan
-Write-Host "   1. 启动 qianji-server: qianji-server"
-Write-Host "   2. 在 IDE 中启用 qianji MCP 工具"
-Write-Host "   3. 让 AI 使用浏览器自动化功能"
-'''
-        return script
+    print(json.dumps(config, indent=2))
+    print("\n" + "=" * 60)
+    print("\nConfiguration Notes:")
+    print("  - The wrapper will auto-start the qianji server if not running")
+    print("  - Server will be accessible at " + server_url)
+    print("  - Environment variables:")
+    print("    - QIANJI_IDLE_TIMEOUT: Browser idle timeout (seconds)")
+    print("    - QIANJI_MAX_LIFETIME: Browser max lifetime (seconds)")
+    print("  - To disable auto-start, add '--no-auto-start' to args")
+    print("=" * 60)
 
 
 def main():
-    """命令行入口"""
+    """MCP 安装脚本入口"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
-        description="qianji MCP 配置工具 - 一键配置 Claude, Cursor, Windsurf"
+        description="Setup qianji MCP for Claude Desktop and Cursor",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Configure both Claude and Cursor with auto-start
+  python -m qianji.mcp_setup
+
+  # Configure with custom Python path
+  python -m qianji.mcp_setup --python /root/miniconda3/envs/py312/bin/python
+
+  # Configure without auto-start (manual server management)
+  python -m qianji.mcp_setup --no-auto-start
+
+  # Print manual configuration
+  python -m qianji.mcp_setup --manual
+        """,
     )
-    
     parser.add_argument(
-        "--ide",
-        choices=["claude", "cursor", "windsurf", "all"],
-        default="all",
-        help="要配置的 IDE (默认: all)"
+        "--server-url",
+        default="http://localhost:18796",
+        help="qianji server URL (default: http://localhost:18796)",
     )
-    
     parser.add_argument(
-        "--server",
-        default="http://localhost:18791",
-        help="qianji 服务器地址 (默认: http://localhost:18791)"
+        "--python",
+        dest="python_path",
+        default=None,
+        help="Python interpreter path (default: auto-detect)",
     )
-    
+    parser.add_argument("--claude", action="store_true", help="Configure Claude Desktop only")
+    parser.add_argument("--cursor", action="store_true", help="Configure Cursor only")
+    parser.add_argument("--manual", action="store_true", help="Print manual configuration only")
     parser.add_argument(
-        "--dry-run",
+        "--no-auto-start",
         action="store_true",
-        help="预览配置，不实际写入"
+        help="Don't auto-start server (manual server management)",
     )
-    
     parser.add_argument(
-        "--generate-script",
-        action="store_true",
-        help="生成 Shell/PowerShell 配置脚本"
+        "--idle-timeout",
+        type=int,
+        default=None,
+        help="Browser idle timeout in seconds (default: 3600)",
     )
-    
     parser.add_argument(
-        "--output",
-        help="脚本输出路径"
+        "--max-lifetime",
+        type=int,
+        default=None,
+        help="Browser max lifetime in seconds (default: 3600)",
     )
-    
+
     args = parser.parse_args()
-    
-    setup = MCPSetup()
-    
-    if args.generate_script:
-        # 生成配置脚本
-        if platform.system() == "Windows":
-            script = setup.generate_powershell_script(args.server)
-            default_output = "setup-qianji-mcp.ps1"
-        else:
-            script = setup.generate_shell_script(args.server)
-            default_output = "setup-qianji-mcp.sh"
-        
-        output_path = args.output or default_output
-        
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(script)
-        
-        # 设置可执行权限 (Unix)
-        if platform.system() != "Windows":
-            os.chmod(output_path, 0o755)
-        
-        print(f"✅ 配置脚本已生成: {output_path}")
-        print(f"\n运行方式:")
-        if platform.system() == "Windows":
-            print(f"   powershell -ExecutionPolicy Bypass -File {output_path}")
-        else:
-            print(f"   ./{output_path}")
-        
+
+    if args.manual:
+        print_manual_config(args.server_url, args.python_path)
         return
-    
-    # 配置 IDE
-    if args.ide == "claude":
-        print(setup.setup_claude(args.server, args.dry_run))
-    elif args.ide == "cursor":
-        print(setup.setup_cursor(args.server, args.dry_run))
-    elif args.ide == "windsurf":
-        print(setup.setup_windsurf(args.server, args.dry_run))
-    else:  # all
-        print(setup.setup_all(args.server, args.dry_run))
 
+    # 如果没有指定，默认配置所有
+    configure_all = not (args.claude or args.cursor)
 
-if __name__ == "__main__":
-    main()
+    print("Setting up qianji MCP...")
+    print(f"Server URL: {args.server_url}")
+    print(f"Python: {args.python_path or 'auto-detect'}")
+    print(f"Auto-start: {not args.no_auto_start}")
+    if args.idle_timeout:
+        print(f"Idle timeout: {args.idle_timeout}s")
+    if args.max_lifetime:
+        print(f"Max lifetime: {args.max_lifetime}s")
+    print()
+
+    # 更新全局配置函数参数
+    global get_mcp_server_config
+    original_get_config = get_mcp_server_config
+
+    def get_mcp_server_config_with_args(server_url):
+        return original_get_config(
+            server_url=server_url,
+            python_path=args.python_path,
+            auto_start=not args.no_auto_start,
+            idle_timeout=args.idle_timeout,
+            max_lifetime=args.max_lifetime,
+        )
+
+    # 替换函数
+    import qianji.mcp_setup
+
+    qianji.mcp_setup.get_mcp_server_config = get_mcp_server_config_with_args
+
+    if configure_all or args.claude:
+        try:
+            setup_claude_mcp(args.server_url)
+        except Exception as e:
+            print(f"✗ Failed to configure Claude Desktop: {e}")
+
+    if configure_all or args.cursor:
+        try:
+            setup_cursor_mcp(args.server_url)
+        except Exception as e:
+            print(f"✗ Failed to configure Cursor: {e}")
+
+    print("\n" + "=" * 60)
+    print("Setup complete!")
+    print("=" * 60)
+    print("\nNext steps:")
+    if args.no_auto_start:
+        print("1. Start qianji server manually:")
+        print(f"   python -m qianji.server --port {args.server_url.split(':')[-1]}")
+        print("2. Restart Claude Desktop or Cursor")
+    else:
+        print("1. Restart Claude Desktop or Cursor")
+        print("2. The MCP wrapper will auto-start the server when needed")
+    print("3. The browser tools will be available in your AI assistant")
+    print("\nAvailable tools:")
+    print("  - browser_navigate: Navigate to a URL")
+    print("  - browser_navigate_and_snapshot: Navigate and get snapshot")
+    print("  - browser_snapshot: Get page snapshot with interactive elements")
+    print("  - browser_click: Click an element")
+    print("  - browser_fill: Fill a form field")
+    print("  - browser_type: Type text")
+    print("  - browser_upload_file: Upload file(s)")
+    print("  - browser_handle_dialog: Handle dialogs")
+    print("  - browser_screenshot: Take a screenshot")
+    print("  - browser_evaluate: Execute JavaScript")
+    print("  - browser_go_back: Go back")
+    print("  - browser_go_forward: Go forward")
+    print("  - browser_reload: Reload page")
 
 
 def sync_main():
-    """同步入口函数 - 用于命令行调用"""
+    """同步入口"""
+    main()
+
+
+if __name__ == "__main__":
     main()

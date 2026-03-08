@@ -5,15 +5,15 @@ qianji v2 - 完全复刻 OpenClaw Browser
 100% API 兼容 OpenClaw browser 系统
 """
 
-from .server import BrowserServer
 from .core.browser_manager import BrowserManager
 from .models.config import BrowserConfig, ProfileConfig
-from .models.snapshot import Snapshot, ElementRef
+from .models.snapshot import ElementRef, Snapshot
+from .server import BrowserServer
 
 __version__ = "2.0.0"
 __all__ = [
     "BrowserServer",
-    "BrowserManager", 
+    "BrowserManager",
     "BrowserConfig",
     "ProfileConfig",
     "Snapshot",
