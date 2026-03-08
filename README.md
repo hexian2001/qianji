@@ -30,10 +30,14 @@ Qianji is an enterprise-grade browser automation tool designed for AI agents, de
 
 ```bash
 # Install from PyPI
-pip install qianji
+cd qianji && pip install -e .
 
-# Install browser dependencies
-playwright install chromium
+# Install Chrome (Intelligent - Auto-detect platform)
+chmod +x install-chrome.sh && ./install-chrome.sh
+source ~/.bashrc  # or ~/.zshrc
+
+# Or use playwright (slower)
+# playwright install chromium
 ```
 
 ### CLI Usage

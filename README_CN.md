@@ -30,10 +30,14 @@ Qianji 是一个企业级的浏览器自动化工具，专为 AI 智能体、开
 
 ```bash
 # 从 PyPI 安装
-pip install qianji
+cd qianji && pip install -e .
 
-# 安装浏览器依赖
-playwright install chromium
+# 安装 Chrome（智能安装 - 自动检测平台）
+chmod +x install-chrome.sh && ./install-chrome.sh
+source ~/.bashrc  # 或 ~/.zshrc
+
+# 或使用 playwright（较慢）
+# playwright install chromium
 ```
 
 ### CLI 使用
