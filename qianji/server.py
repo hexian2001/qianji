@@ -1,6 +1,4 @@
-"""
-HTTP 服务器 - 对应 OpenClaw browser/server.js
-"""
+"""HTTP 服务器。"""
 
 import asyncio
 import os
@@ -97,7 +95,7 @@ class BrowserServer:
 
         app = FastAPI(
             title="qianji",
-            description="Universal Browser Automation for AI - 100% OpenClaw Compatible",
+            description="Universal Browser Automation for AI",
             version="2.0.0",
             lifespan=lifespan,
         )

@@ -1,33 +1,38 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Qianji API",
-    "description": "Universal Browser Automation API - 100% OpenClaw Compatible",
-    "version": "2.0.0",
-    "contact": {
-      "name": "Qianji Team",
-      "url": "https://github.com/hexian2001/qianji/issues"
-    },
-    "license": {
-      "name": "MIT",
-      "url": "https://opensource.org/licenses/MIT"
-    }
+    "title": "qianji",
+    "description": "Universal Browser Automation for AI",
+    "version": "2.0.0"
   },
-  "servers": [
-    {
-      "url": "http://localhost:18796",
-      "description": "Local development server"
-    }
-  ],
   "paths": {
-    "/": {
+    "/health": {
       "get": {
-        "summary": "Get server status",
-        "description": "Returns the current status of the qianji server",
-        "operationId": "getStatus",
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
         "responses": {
           "200": {
-            "description": "Server status",
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "basic"
+        ],
+        "summary": "Get Status",
+        "description": "获取浏览器状态",
+        "operationId": "get_status__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -41,16 +46,19 @@
     },
     "/browsers": {
       "get": {
-        "summary": "List all browsers",
-        "description": "Returns a list of all browser instances",
-        "operationId": "listBrowsers",
+        "tags": [
+          "basic"
+        ],
+        "summary": "List Browsers",
+        "description": "列出所有浏览器实例",
+        "operationId": "list_browsers_browsers_get",
         "responses": {
           "200": {
-            "description": "List of browsers",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrowserListResponse"
+                  "$ref": "#/components/schemas/GenericResponse"
                 }
               }
             }
@@ -58,43 +66,220 @@
         }
       }
     },
-    "/start": {
+    "/browsers/create": {
       "post": {
-        "summary": "Start default browser",
-        "description": "Starts the default browser instance",
-        "operationId": "startBrowser",
+        "tags": [
+          "basic"
+        ],
+        "summary": "Create Browser",
+        "description": "创建新浏览器实例\n\nArgs:\n    profile: 浏览器配置文件名称\n    browser_id: 指定的浏览器ID（可选）\n    idle_timeout: 空闲超时时间（秒），默认使用服务器配置\n    max_lifetime: 最大生命周期（秒），默认使用服务器配置\n    headless: 是否使用无头模式，默认使用服务器配置\n    no_sandbox: 是否禁用沙箱，默认使用服务器配置\n    args: 额外的浏览器启动参数",
+        "operationId": "create_browser_browsers_create_post",
         "parameters": [
           {
             "name": "profile",
             "in": "query",
-            "description": "Profile name to use",
+            "required": false,
             "schema": {
-              "type": "string",
-              "default": "default"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Profile"
+            }
+          },
+          {
+            "name": "browser_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Browser Id"
+            }
+          },
+          {
+            "name": "idle_timeout",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idle Timeout"
+            }
+          },
+          {
+            "name": "max_lifetime",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Lifetime"
             }
           },
           {
             "name": "headless",
             "in": "query",
-            "description": "Run in headless mode",
+            "required": false,
             "schema": {
-              "type": "boolean",
-              "default": true
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Headless"
             }
           },
           {
             "name": "no_sandbox",
             "in": "query",
-            "description": "Disable sandbox (for Docker/root)",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "No Sandbox"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Args"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers/{browser_id}/close": {
+      "post": {
+        "tags": [
+          "basic"
+        ],
+        "summary": "Close Browser",
+        "description": "关闭指定浏览器实例",
+        "operationId": "close_browser_browsers__browser_id__close_post",
+        "parameters": [
+          {
+            "name": "browser_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Browser Id"
+            }
+          },
+          {
+            "name": "purge_profile",
+            "in": "query",
+            "required": false,
             "schema": {
               "type": "boolean",
-              "default": false
+              "default": false,
+              "title": "Purge Profile"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Browser started successfully",
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reset": {
+      "post": {
+        "tags": [
+          "basic"
+        ],
+        "summary": "Reset Browser",
+        "description": "重置所有浏览器",
+        "operationId": "reset_browser_reset_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -108,26 +293,39 @@
     },
     "/api/v1/navigate": {
       "post": {
-        "summary": "Navigate to URL",
-        "description": "Navigates the browser to the specified URL",
-        "operationId": "navigate",
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Navigate",
+        "description": "导航到 URL - 如果浏览器未运行会自动启动",
+        "operationId": "navigate_api_v1_navigate_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/NavigateRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
-            "description": "Navigation successful",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NavigateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -137,9 +335,12 @@
     },
     "/api/v1/snapshot": {
       "post": {
-        "summary": "Get page snapshot",
-        "description": "Captures a snapshot of the current page including interactive elements",
-        "operationId": "getSnapshot",
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Create Snapshot",
+        "description": "创建页面快照 - 如果浏览器未运行会自动启动",
+        "operationId": "create_snapshot_api_v1_snapshot_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -147,11 +348,12 @@
                 "$ref": "#/components/schemas/SnapshotRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
-            "description": "Snapshot captured successfully",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
@@ -159,32 +361,13 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/v1/act/click": {
-      "post": {
-        "summary": "Click element",
-        "description": "Clicks on an element by its reference ID",
-        "operationId": "clickElement",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ClickRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Click successful",
+          },
+          "422": {
+            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GenericResponse"
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -192,28 +375,41 @@
         }
       }
     },
-    "/api/v1/act/type": {
+    "/api/v1/navigate_and_snapshot": {
       "post": {
-        "summary": "Type text",
-        "description": "Types text into an input element",
-        "operationId": "typeText",
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Navigate And Snapshot",
+        "description": "复合操作: 导航到URL并立即返回快照（减少 LLM 调用步骤）",
+        "operationId": "navigate_and_snapshot_api_v1_navigate_and_snapshot_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TypeRequest"
+                "$ref": "#/components/schemas/NavigateAndSnapshotRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
-            "description": "Text typed successfully",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GenericResponse"
+                  "$ref": "#/components/schemas/SnapshotResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -223,26 +419,1687 @@
     },
     "/api/v1/screenshot": {
       "post": {
-        "summary": "Take screenshot",
-        "description": "Captures a screenshot of the current page",
-        "operationId": "takeScreenshot",
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Take Screenshot",
+        "description": "截图 - 如果浏览器未运行会自动启动",
+        "operationId": "take_screenshot_api_v1_screenshot_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ScreenshotRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
-            "description": "Screenshot captured successfully",
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ScreenshotResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pdf": {
+      "post": {
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Generate Pdf",
+        "description": "生成 PDF - 如果浏览器未运行会自动启动",
+        "operationId": "generate_pdf_api_v1_pdf_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PDFRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PDFResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/go-back": {
+      "post": {
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Go Back",
+        "description": "后退 - 如果浏览器未运行会自动启动",
+        "operationId": "go_back_api_v1_go_back_post",
+        "parameters": [
+          {
+            "name": "browserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Browserid"
+            }
+          },
+          {
+            "name": "targetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Targetid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/go-forward": {
+      "post": {
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Go Forward",
+        "description": "前进 - 如果浏览器未运行会自动启动",
+        "operationId": "go_forward_api_v1_go_forward_post",
+        "parameters": [
+          {
+            "name": "browserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Browserid"
+            }
+          },
+          {
+            "name": "targetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Targetid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reload": {
+      "post": {
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Reload",
+        "description": "刷新 - 如果浏览器未运行会自动启动",
+        "operationId": "reload_api_v1_reload_post",
+        "parameters": [
+          {
+            "name": "browserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Browserid"
+            }
+          },
+          {
+            "name": "targetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Targetid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scroll": {
+      "post": {
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Scroll Page",
+        "description": "滚动页面 - 支持方向滚动和滚动到指定元素",
+        "operationId": "scroll_page_api_v1_scroll_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrollRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/get_text": {
+      "post": {
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Get Element Text",
+        "description": "获取指定元素的文本内容",
+        "operationId": "get_element_text_api_v1_get_text_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetTextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/get_attribute": {
+      "post": {
+        "tags": [
+          "snapshot"
+        ],
+        "summary": "Get Element Attribute",
+        "description": "获取指定元素的属性",
+        "operationId": "get_element_attribute_api_v1_get_attribute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetAttributeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/click": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Click",
+        "description": "点击元素 - 操作后自动返回最新快照",
+        "operationId": "click_api_v1_act_click_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClickRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/type": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Type Text",
+        "description": "输入文本 - 操作后自动返回最新快照",
+        "operationId": "type_text_api_v1_act_type_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TypeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/fill": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Fill",
+        "description": "填充表单字段 - 操作后自动返回最新快照",
+        "operationId": "fill_api_v1_act_fill_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FillRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/press": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Press Key",
+        "description": "按键",
+        "operationId": "press_key_api_v1_act_press_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/hover": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Hover",
+        "description": "悬停元素",
+        "operationId": "hover_api_v1_act_hover_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/select": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Select Option",
+        "description": "下拉选择 - 操作后自动返回快照",
+        "operationId": "select_option_api_v1_act_select_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/fill_form": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Fill Form",
+        "description": "批量填写表单 - 减少 LLM 调用步骤",
+        "operationId": "fill_form_api_v1_act_fill_form_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FillFormRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/evaluate": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Evaluate",
+        "description": "执行 JavaScript",
+        "operationId": "evaluate_api_v1_act_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/wait_for_element": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Wait For Element",
+        "description": "等待元素出现",
+        "operationId": "wait_for_element_api_v1_act_wait_for_element_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitForElementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/upload": {
+      "post": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Upload File",
+        "description": "文件上传",
+        "operationId": "upload_file_api_v1_act_upload_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadFileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/act/downloads": {
+      "get": {
+        "tags": [
+          "act"
+        ],
+        "summary": "Get Downloads",
+        "description": "获取下载列表",
+        "operationId": "get_downloads_api_v1_act_downloads_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/cookies": {
+      "post": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "Get Cookies",
+        "description": "获取 Cookie",
+        "operationId": "get_cookies_api_v1_storage_cookies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetCookiesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/cookies/set": {
+      "post": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "Set Cookie",
+        "description": "设置 Cookie",
+        "operationId": "set_cookie_api_v1_storage_cookies_set_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCookieRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/cookies/clear": {
+      "post": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "Clear Cookies",
+        "description": "清除 Cookie - 修复: 支持按 name/domain/path 过滤",
+        "operationId": "clear_cookies_api_v1_storage_cookies_clear_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteCookiesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/storage/get": {
+      "post": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "Get Storage",
+        "description": "获取 Storage",
+        "operationId": "get_storage_api_v1_storage_storage_get_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/storage/set": {
+      "post": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "Set Storage",
+        "description": "设置 Storage",
+        "operationId": "set_storage_api_v1_storage_storage_set_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorageSetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/storage/remove": {
+      "post": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "Remove Storage",
+        "description": "删除 Storage 项",
+        "operationId": "remove_storage_api_v1_storage_storage_remove_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorageRemoveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/storage/clear": {
+      "post": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "Clear Storage",
+        "description": "清空 Storage",
+        "operationId": "clear_storage_api_v1_storage_storage_clear_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorageClearRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/save_cookies": {
+      "post": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "Save Cookies",
+        "description": "保存当前页面的 cookies 到文件",
+        "operationId": "save_cookies_api_v1_storage_save_cookies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveCookiesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/load_cookies": {
+      "post": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "Load Cookies",
+        "description": "从文件加载 cookies 到当前页面",
+        "operationId": "load_cookies_api_v1_storage_load_cookies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoadCookiesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/list_sessions": {
+      "get": {
+        "tags": [
+          "storage"
+        ],
+        "summary": "List Cookie Sessions",
+        "description": "列出所有保存的 cookie 会话",
+        "operationId": "list_cookie_sessions_api_v1_storage_list_sessions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/debug/console/log": {
+      "post": {
+        "tags": [
+          "debug"
+        ],
+        "summary": "Add Console Log",
+        "description": "添加控制台日志",
+        "operationId": "add_console_log_api_v1_debug_console_log_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogEntry"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/debug/console/get": {
+      "post": {
+        "tags": [
+          "debug"
+        ],
+        "summary": "Get Console Logs",
+        "description": "获取控制台日志",
+        "operationId": "get_console_logs_api_v1_debug_console_get_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetLogsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/debug/console/clear": {
+      "post": {
+        "tags": [
+          "debug"
+        ],
+        "summary": "Clear Console Logs",
+        "description": "清除控制台日志",
+        "operationId": "clear_console_logs_api_v1_debug_console_clear_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClearLogsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/debug/errors/get": {
+      "post": {
+        "tags": [
+          "debug"
+        ],
+        "summary": "Get Page Errors",
+        "description": "获取页面错误",
+        "operationId": "get_page_errors_api_v1_debug_errors_get_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetLogsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/debug/errors/clear": {
+      "post": {
+        "tags": [
+          "debug"
+        ],
+        "summary": "Clear Page Errors",
+        "description": "清除页面错误",
+        "operationId": "clear_page_errors_api_v1_debug_errors_clear_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClearLogsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/debug/network/get": {
+      "post": {
+        "tags": [
+          "debug"
+        ],
+        "summary": "Get Network Requests",
+        "description": "获取网络请求",
+        "operationId": "get_network_requests_api_v1_debug_network_get_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetLogsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/debug/network/clear": {
+      "post": {
+        "tags": [
+          "debug"
+        ],
+        "summary": "Clear Network Requests",
+        "description": "清除网络请求",
+        "operationId": "clear_network_requests_api_v1_debug_network_clear_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClearLogsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tabs": {
+      "get": {
+        "tags": [
+          "tabs"
+        ],
+        "summary": "List Tabs",
+        "description": "列出所有标签页",
+        "operationId": "list_tabs_api_v1_tabs_get",
+        "parameters": [
+          {
+            "name": "browserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Browserid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tabs/open": {
+      "post": {
+        "tags": [
+          "tabs"
+        ],
+        "summary": "Open Tab",
+        "description": "打开新标签页 - 如果浏览器未运行会自动启动",
+        "operationId": "open_tab_api_v1_tabs_open_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenTabRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tabs/close": {
+      "post": {
+        "tags": [
+          "tabs"
+        ],
+        "summary": "Close Tab",
+        "description": "关闭标签页",
+        "operationId": "close_tab_api_v1_tabs_close_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseTabRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tabs/focus": {
+      "post": {
+        "tags": [
+          "tabs"
+        ],
+        "summary": "Focus Tab",
+        "description": "聚焦标签页",
+        "operationId": "focus_tab_api_v1_tabs_focus_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FocusTabRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -253,228 +2110,2067 @@
   },
   "components": {
     "schemas": {
-      "StatusResponse": {
-        "type": "object",
+      "ClearLogsRequest": {
         "properties": {
-          "enabled": {
-            "type": "boolean",
-            "description": "Whether the server is enabled"
-          },
-          "running": {
-            "type": "boolean",
-            "description": "Whether a browser is running"
-          },
-          "cdpReady": {
-            "type": "boolean",
-            "description": "Whether CDP is ready"
-          },
-          "profile": {
-            "type": "string",
-            "description": "Current profile name"
-          },
-          "chosenBrowser": {
-            "type": "string",
-            "description": "Selected browser type"
-          }
-        }
-      },
-      "BrowserListResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "type": "boolean"
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "totalBrowsers": {
-                "type": "integer"
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
               },
-              "runningBrowsers": {
-                "type": "integer"
-              },
-              "totalTabs": {
-                "type": "integer"
-              },
-              "browsers": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/BrowserInfo"
-                }
+              {
+                "type": "null"
               }
-            }
-          }
-        }
-      },
-      "BrowserInfo": {
-        "type": "object",
-        "properties": {
-          "browserId": {
-            "type": "string"
-          },
-          "profileName": {
-            "type": "string"
-          },
-          "running": {
-            "type": "boolean"
-          },
-          "tabs": {
-            "type": "integer"
-          }
-        }
-      },
-      "GenericResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "type": "boolean"
-          },
-          "success": {
-            "type": "boolean"
-          },
-          "data": {
-            "type": "object"
-          }
-        }
-      },
-      "NavigateRequest": {
-        "type": "object",
-        "required": ["url"],
-        "properties": {
-          "url": {
-            "type": "string",
-            "format": "uri",
-            "description": "URL to navigate to"
-          },
-          "browserId": {
-            "type": "string",
-            "description": "Browser instance ID"
+            ],
+            "title": "Browserid"
           },
           "targetId": {
-            "type": "string",
-            "description": "Target tab ID"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
           }
-        }
-      },
-      "NavigateResponse": {
+        },
         "type": "object",
-        "properties": {
-          "ok": {
-            "type": "boolean"
-          },
-          "url": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          }
-        }
-      },
-      "SnapshotRequest": {
-        "type": "object",
-        "properties": {
-          "browserId": {
-            "type": "string"
-          },
-          "targetId": {
-            "type": "string"
-          }
-        }
-      },
-      "SnapshotResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "type": "boolean"
-          },
-          "url": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "text": {
-            "type": "string",
-            "description": "Page text content"
-          },
-          "interactive": {
-            "type": "string",
-            "description": "Interactive elements list"
-          }
-        }
+        "title": "ClearLogsRequest"
       },
       "ClickRequest": {
-        "type": "object",
-        "required": ["ref"],
         "properties": {
           "ref": {
             "type": "string",
-            "description": "Element reference ID (e.g., e1)"
+            "title": "Ref"
           },
           "browserId": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
           },
           "targetId": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "doubleClick": {
+            "type": "boolean",
+            "title": "Doubleclick",
+            "default": false
           }
-        }
-      },
-      "TypeRequest": {
+        },
         "type": "object",
-        "required": ["ref", "text"],
+        "required": [
+          "ref"
+        ],
+        "title": "ClickRequest"
+      },
+      "CloseTabRequest": {
+        "properties": {
+          "targetId": {
+            "type": "string",
+            "title": "Targetid"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "targetId"
+        ],
+        "title": "CloseTabRequest"
+      },
+      "DeleteCookiesRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "title": "DeleteCookiesRequest"
+      },
+      "EvaluateRequest": {
+        "properties": {
+          "script": {
+            "type": "string",
+            "title": "Script"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "script"
+        ],
+        "title": "EvaluateRequest"
+      },
+      "FillFormField": {
         "properties": {
           "ref": {
             "type": "string",
-            "description": "Element reference ID"
+            "title": "Ref"
           },
           "text": {
             "type": "string",
-            "description": "Text to type"
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "text"
+        ],
+        "title": "FillFormField"
+      },
+      "FillFormRequest": {
+        "properties": {
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/FillFormField"
+            },
+            "type": "array",
+            "title": "Fields"
           },
-          "submit": {
-            "type": "boolean",
-            "description": "Submit form after typing",
-            "default": false
+          "submitRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitref"
           },
           "browserId": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
           },
           "targetId": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
           }
-        }
-      },
-      "ScreenshotRequest": {
+        },
         "type": "object",
-        "required": ["path"],
+        "required": [
+          "fields"
+        ],
+        "title": "FillFormRequest",
+        "description": "批量填写表单"
+      },
+      "FillRequest": {
         "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "text"
+        ],
+        "title": "FillRequest"
+      },
+      "FocusTabRequest": {
+        "properties": {
+          "targetId": {
+            "type": "string",
+            "title": "Targetid"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "targetId"
+        ],
+        "title": "FocusTabRequest"
+      },
+      "GenericResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "snapshot": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "title": "GenericResponse",
+        "description": "通用响应"
+      },
+      "GetAttributeRequest": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "attribute": {
+            "type": "string",
+            "title": "Attribute"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "attribute"
+        ],
+        "title": "GetAttributeRequest"
+      },
+      "GetCookiesRequest": {
+        "properties": {
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "urls": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Urls"
+          }
+        },
+        "type": "object",
+        "title": "GetCookiesRequest"
+      },
+      "GetLogsRequest": {
+        "properties": {
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "default": 50
+          }
+        },
+        "type": "object",
+        "title": "GetLogsRequest"
+      },
+      "GetTextRequest": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref"
+        ],
+        "title": "GetTextRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HoverRequest": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref"
+        ],
+        "title": "HoverRequest"
+      },
+      "LoadCookiesRequest": {
+        "properties": {
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "storage_name": {
+            "type": "string",
+            "title": "Storage Name",
+            "default": "default"
+          }
+        },
+        "type": "object",
+        "title": "LoadCookiesRequest",
+        "description": "加载 Cookies 请求"
+      },
+      "LogEntry": {
+        "properties": {
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": "log"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "LogEntry"
+      },
+      "NavigateAndSnapshotRequest": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "timeout": {
+            "type": "integer",
+            "title": "Timeout",
+            "default": 30000
+          },
+          "waitUntil": {
+            "type": "string",
+            "title": "Waituntil",
+            "default": "domcontentloaded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "NavigateAndSnapshotRequest",
+        "description": "复合操作: 导航 + 快照"
+      },
+      "NavigateRequest": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "timeout": {
+            "type": "integer",
+            "title": "Timeout",
+            "default": 30000
+          },
+          "waitUntil": {
+            "type": "string",
+            "title": "Waituntil",
+            "default": "domcontentloaded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "NavigateRequest"
+      },
+      "NavigateResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "targetId": {
+            "type": "string",
+            "title": "Targetid"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "snapshot": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "targetId",
+          "url"
+        ],
+        "title": "NavigateResponse",
+        "description": "导航响应"
+      },
+      "OpenTabRequest": {
+        "properties": {
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "default": "about:blank"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          }
+        },
+        "type": "object",
+        "title": "OpenTabRequest"
+      },
+      "PDFRequest": {
+        "properties": {
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "title": "PDFRequest"
+      },
+      "PDFResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
           "path": {
             "type": "string",
-            "description": "Output file path"
+            "title": "Path"
+          },
+          "targetId": {
+            "type": "string",
+            "title": "Targetid"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "targetId",
+          "url"
+        ],
+        "title": "PDFResponse",
+        "description": "PDF响应"
+      },
+      "PressRequest": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "PressRequest"
+      },
+      "SaveCookiesRequest": {
+        "properties": {
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "storage_name": {
+            "type": "string",
+            "title": "Storage Name",
+            "default": "default"
+          }
+        },
+        "type": "object",
+        "title": "SaveCookiesRequest",
+        "description": "保存 Cookies 请求"
+      },
+      "ScreenshotRequest": {
+        "properties": {
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
           },
           "fullPage": {
             "type": "boolean",
-            "description": "Capture full page",
+            "title": "Fullpage",
             "default": false
           },
-          "browserId": {
-            "type": "string"
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
           },
-          "targetId": {
-            "type": "string"
-          }
-        }
-      },
-      "ScreenshotResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "type": "boolean"
+          "element": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Element"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": "png"
           },
           "path": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "annotate": {
+            "type": "boolean",
+            "title": "Annotate",
+            "default": false
           }
-        }
+        },
+        "type": "object",
+        "title": "ScreenshotRequest"
+      },
+      "ScreenshotResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "targetId": {
+            "type": "string",
+            "title": "Targetid"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "targetId",
+          "url"
+        ],
+        "title": "ScreenshotResponse",
+        "description": "截图响应"
+      },
+      "ScrollRequest": {
+        "properties": {
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction",
+            "default": "down"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount",
+            "default": 500
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          }
+        },
+        "type": "object",
+        "title": "ScrollRequest"
+      },
+      "SelectRequest": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Values"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "values"
+        ],
+        "title": "SelectRequest"
+      },
+      "SetCookieRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "expires": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires"
+          },
+          "httpOnly": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Httponly"
+          },
+          "secure": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secure"
+          },
+          "sameSite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Strict",
+                  "Lax",
+                  "None"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Samesite"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "title": "SetCookieRequest"
+      },
+      "SnapshotElementData": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "selector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selector"
+          },
+          "ariaLabel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arialabel"
+          },
+          "placeholder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placeholder"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "checked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked"
+          },
+          "disabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disabled"
+          },
+          "bbox": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "type"
+        ],
+        "title": "SnapshotElementData",
+        "description": "快照元素数据"
+      },
+      "SnapshotRequest": {
+        "properties": {
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "refs": {
+            "type": "string",
+            "title": "Refs",
+            "default": "role"
+          },
+          "maxElements": {
+            "type": "integer",
+            "title": "Maxelements",
+            "default": 150
+          },
+          "viewportOnly": {
+            "type": "boolean",
+            "title": "Viewportonly",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SnapshotRequest"
+      },
+      "SnapshotResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "targetId": {
+            "type": "string",
+            "title": "Targetid"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "interactive": {
+            "type": "string",
+            "title": "Interactive"
+          },
+          "domHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domhash"
+          },
+          "totalElements": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Totalelements"
+          },
+          "elements": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SnapshotElementData"
+            },
+            "type": "object",
+            "title": "Elements"
+          },
+          "viewport": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Viewport"
+          },
+          "scroll": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Scroll"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "targetId",
+          "url",
+          "title",
+          "text",
+          "summary",
+          "interactive",
+          "elements",
+          "viewport",
+          "scroll"
+        ],
+        "title": "SnapshotResponse",
+        "description": "快照响应"
+      },
+      "StatusResponse": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "profile": {
+            "type": "string",
+            "title": "Profile"
+          },
+          "running": {
+            "type": "boolean",
+            "title": "Running"
+          },
+          "cdpReady": {
+            "type": "boolean",
+            "title": "Cdpready"
+          },
+          "cdpHttp": {
+            "type": "boolean",
+            "title": "Cdphttp"
+          },
+          "pid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pid"
+          },
+          "cdpPort": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cdpport"
+          },
+          "cdpUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cdpurl"
+          },
+          "chosenBrowser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chosenbrowser"
+          },
+          "detectedBrowser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detectedbrowser"
+          },
+          "detectedExecutablePath": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detectedexecutablepath"
+          },
+          "detectError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detecterror"
+          },
+          "userDataDir": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Userdatadir"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color",
+            "default": "#FF4500"
+          },
+          "headless": {
+            "type": "boolean",
+            "title": "Headless",
+            "default": true
+          },
+          "noSandbox": {
+            "type": "boolean",
+            "title": "Nosandbox",
+            "default": false
+          },
+          "executablePath": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Executablepath"
+          },
+          "attachOnly": {
+            "type": "boolean",
+            "title": "Attachonly",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "profile",
+          "running",
+          "cdpReady",
+          "cdpHttp"
+        ],
+        "title": "StatusResponse",
+        "description": "状态响应"
+      },
+      "StorageClearRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "localStorage",
+              "sessionStorage"
+            ],
+            "title": "Kind"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "StorageClearRequest"
+      },
+      "StorageRemoveRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "localStorage",
+              "sessionStorage"
+            ],
+            "title": "Kind"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "key"
+        ],
+        "title": "StorageRemoveRequest"
+      },
+      "StorageRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "localStorage",
+              "sessionStorage"
+            ],
+            "title": "Kind"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "StorageRequest"
+      },
+      "StorageSetRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "localStorage",
+              "sessionStorage"
+            ],
+            "title": "Kind"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "key",
+          "value"
+        ],
+        "title": "StorageSetRequest"
+      },
+      "TypeRequest": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "submit": {
+            "type": "boolean",
+            "title": "Submit",
+            "default": false
+          },
+          "slowly": {
+            "type": "boolean",
+            "title": "Slowly",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "text"
+        ],
+        "title": "TypeRequest"
+      },
+      "UploadFileRequest": {
+        "properties": {
+          "ref": {
+            "type": "string",
+            "title": "Ref"
+          },
+          "filePaths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filepaths"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "filePaths"
+        ],
+        "title": "UploadFileRequest",
+        "description": "文件上传"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WaitForElementRequest": {
+        "properties": {
+          "selector": {
+            "type": "string",
+            "title": "Selector"
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid"
+          },
+          "targetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetid"
+          },
+          "timeout": {
+            "type": "integer",
+            "title": "Timeout",
+            "default": 30000
+          }
+        },
+        "type": "object",
+        "required": [
+          "selector"
+        ],
+        "title": "WaitForElementRequest"
       }
     }
   }

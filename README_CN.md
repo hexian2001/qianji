@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**通用浏览器自动化工具 - 100% OpenClaw 兼容**
+**通用浏览器自动化工具**
 
 Qianji 是一个企业级的浏览器自动化工具，专为 AI 智能体、开发者和自动化工作流设计。它提供了强大的 HTTP API、CLI 工具和 MCP（模型上下文协议）支持。
 
@@ -23,6 +23,7 @@ Qianji 是一个企业级的浏览器自动化工具，专为 AI 智能体、开
 - 🍪 **存储管理** - Cookies、localStorage、sessionStorage
 - 🐛 **调试工具** - 控制台日志、网络请求、错误捕获
 - 🔒 **企业级** - 结构化日志、错误处理、完整测试
+- 🛡️ **验证码绕过** - 增强的人机验证规避能力，支持隐身模式
 
 ## 🚀 快速开始
 
@@ -211,7 +212,7 @@ qianji snapshot --format json
 
 - [Playwright](https://playwright.dev/) - 浏览器自动化库
 - [FastAPI](https://fastapi.tiangolo.com/) - Web 框架
-- [OpenClaw](https://github.com/efritz/openclaw) - API 兼容灵感
+- [OpenClaw](https://github.com/efritz/openclaw) - 浏览器自动化设计参考
 
 ## 📞 支持
 

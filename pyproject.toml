@@ -1,7 +1,7 @@
 [project]
 name = "qianji"
-version = "0.2.0"
-description = "Universal Browser Automation for AI - 100% OpenClaw Compatible"
+version = "0.2.1"
+description = "Universal Browser Automation for AI"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}

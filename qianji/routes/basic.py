@@ -3,7 +3,7 @@
 提供状态查询、浏览器管理等功能
 """
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from ..core.browser_manager import BrowserManager
 from ..core.browser_registry import BrowserRegistry
@@ -44,6 +44,21 @@ async def ensure_browser_manager(
     """确保浏览器管理器存在并运行"""
     registry = get_browser_registry()
     return await registry.ensure_browser(browser_id, profile_name)
+
+
+async def _close_browser_or_404(browser_id: str, *, purge_profile: bool = False) -> GenericResponse:
+    """Close a browser instance or raise a 404 when it does not exist."""
+    registry = get_browser_registry()
+
+    success = await registry.close_browser(browser_id, purge_profile=purge_profile)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Browser not found: {browser_id}")
+
+    return GenericResponse(
+        ok=True,
+        success=True,
+        data={"browserId": browser_id, "closed": True, "purgedProfile": purge_profile},
+    )
 
 
 @router.get("/", response_model=StatusResponse)
@@ -178,81 +193,31 @@ async def create_browser(
 
 
 @router.post("/browsers/{browser_id}/close", response_model=GenericResponse)
-async def close_browser(browser_id: str):
+async def close_browser(browser_id: str, purge_profile: bool = False):
     """关闭指定浏览器实例"""
-    registry = get_browser_registry()
-
-    success = await registry.close_browser(browser_id)
-    if not success:
-        raise HTTPException(status_code=404, detail=f"Browser not found: {browser_id}")
-
-    return GenericResponse(
-        ok=True,
-        success=True,
-        data={"browserId": browser_id, "closed": True},
-    )
-
-
-@router.post("/start", response_model=GenericResponse)
-async def start_browser(
-    profile: str | None = None,
-    headless: bool | None = None,
-    no_sandbox: bool | None = None,
-    args: list[str] | None = None,
-    background_tasks: BackgroundTasks = None,
-):
-    """启动浏览器（兼容旧版API，创建新浏览器实例）
-
-    Args:
-        profile: 浏览器配置文件名称
-        headless: 是否使用无头模式，默认使用服务器配置
-        no_sandbox: 是否禁用沙箱，默认使用服务器配置
-        args: 额外的浏览器启动参数
-    """
-    registry = get_browser_registry()
-
-    # 生成浏览器ID
-    browser_id = f"browser_{len(registry._browsers) + 1}"
-
-    # 在后台启动浏览器，避免HTTP超时
-    async def start_browser_async():
-        try:
-            await registry.create_browser(
-                profile_name=profile,
-                browser_id=browser_id,
-                headless=headless,
-                no_sandbox=no_sandbox,
-                args=args,
-            )
-        except Exception as e:
-            print(f"[ERROR] Failed to start browser {browser_id}: {e}")
-
-    # 启动后台任务
-    import asyncio
-
-    asyncio.create_task(start_browser_async())
-
-    return GenericResponse(
-        ok=True,
-        success=True,
-        data={"browserId": browser_id, "profile": profile or "default", "status": "starting"},
-    )
+    return await _close_browser_or_404(browser_id, purge_profile=purge_profile)
 
 
 @router.post("/stop", response_model=GenericResponse)
-async def stop_browser():
-    """停止所有浏览器（兼容旧版API）"""
+async def stop_browser(browser_id: str | None = None):
+    """停止浏览器（兼容旧版 API）
+
+    Args:
+        browser_id: 浏览器ID，如果为 None 则停止默认浏览器
+    """
     registry = get_browser_registry()
 
-    try:
-        await registry.close_all()
-        return GenericResponse(
-            ok=True,
-            success=True,
-            data={"stopped": True},
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # 如果没有指定 browser_id，停止第一个运行的浏览器
+    if not browser_id:
+        for bid, instance in list(registry._browsers.items()):
+            if instance.manager.is_running:
+                browser_id = bid
+                break
+
+    if not browser_id:
+        raise HTTPException(status_code=404, detail="No running browser found")
+
+    return await _close_browser_or_404(browser_id, purge_profile=False)
 
 
 @router.post("/reset", response_model=GenericResponse)

@@ -129,6 +129,25 @@ async def navigate(request: NavigateRequest):
             timeout=request.timeout,
             wait_until=request.waitUntil,
         )
+
+        # 导航后立即注入反检测脚本
+        try:
+            await tab.page.evaluate("""
+                (() => {
+                    Object.defineProperty(Navigator.prototype, 'platform', {
+                        get: () => 'Win32',
+                        configurable: true,
+                        enumerable: true
+                    });
+                    Object.defineProperty(Navigator.prototype, 'languages', {
+                        get: () => ['zh-CN', 'zh', 'en-US', 'en'],
+                        configurable: true
+                    });
+                })();
+            """)
+        except:
+            pass
+
         await tab.update_info()
 
         return NavigateResponse(

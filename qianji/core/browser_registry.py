@@ -5,6 +5,7 @@
 
 import asyncio
 import os
+import shutil
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -297,20 +298,24 @@ class BrowserRegistry:
                     instance.last_activity_at = asyncio.get_event_loop().time()
                     return bid, instance.manager
 
-            # 创建新浏览器
-            new_browser_id = await self.create_browser(profile_name)
-            return new_browser_id, self._browsers[new_browser_id].manager
+        # 在锁外创建新浏览器，避免 ensure_browser -> create_browser 重入死锁
+        new_browser_id = await self.create_browser(profile_name)
+        return new_browser_id, self._browsers[new_browser_id].manager
 
-    async def close_browser(self, browser_id: str) -> bool:
+    async def close_browser(self, browser_id: str, *, purge_profile: bool = False) -> bool:
         """关闭指定浏览器"""
         async with self._lock:
             instance = self._browsers.get(browser_id)
             if not instance:
                 return False
 
+            user_data_dir = instance.user_data_dir
             await instance.manager.stop()
             del self._browsers[browser_id]
-            return True
+
+        if purge_profile and user_data_dir:
+            shutil.rmtree(user_data_dir, ignore_errors=True)
+        return True
 
     async def close_all(self):
         """关闭所有浏览器"""

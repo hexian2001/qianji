@@ -12,7 +12,7 @@ from .tabs import router as tabs_router
 
 
 def create_api_router() -> APIRouter:
-    """创建 API 路由 (用于向后兼容)"""
+    """创建 API 路由。"""
     api_router = APIRouter()
 
     # 基础路由

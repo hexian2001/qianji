@@ -211,9 +211,7 @@ class QianjiClient:
 
     async def close_browser(self, browser_id: str) -> dict:
         """关闭指定浏览器"""
-        resp = await self.client.post(
-            f"{self.base_url}/browsers/close", params={"browser_id": browser_id}
-        )
+        resp = await self.client.post(f"{self.base_url}/browsers/{browser_id}/close")
         resp.raise_for_status()
         return resp.json()
 

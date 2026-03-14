@@ -5,7 +5,14 @@
 import os
 from typing import Any
 
-from playwright.async_api import Browser, BrowserContext, async_playwright
+try:
+    from patchright.async_api import Browser, BrowserContext, async_playwright
+    USING_PATCHRIGHT = True
+    print("[INFO] Using Patchright for enhanced stealth")
+except ImportError:
+    from playwright.async_api import Browser, BrowserContext, async_playwright
+    USING_PATCHRIGHT = False
+    print("[INFO] Using standard Playwright")
 
 from ..models.config import BrowserConfig, ProfileConfig
 from .tab_manager import TabManager
@@ -23,14 +30,41 @@ def get_default_user_data_dir() -> str:
 # 反检测脚本 - 注入到每个页面以隐藏自动化特征
 STEALTH_SCRIPTS = """
 (() => {
-    // 覆盖 navigator.webdriver
-    Object.defineProperty(navigator, 'webdriver', {
-        get: () => undefined,
-        configurable: true
-    });
-    
+    // 标记脚本已注入
+    window.__stealth_injected = true;
+    window.__stealth_step = 0;
+
+    try {
+        window.__stealth_step = 1;
+        // 覆盖 navigator.webdriver - 多重防护
+        Object.defineProperty(navigator, 'webdriver', {
+            get: () => false,
+            configurable: true,
+            enumerable: true
+        });
+        window.__stealth_step = 2;
+
     // 删除 chrome 自动化属性
     delete navigator.__proto__.webdriver;
+
+    // 删除 window.cdc_ 开头的属性（Chrome DevTools Protocol 特征）
+    Object.keys(window).forEach(key => {
+        if (key.startsWith('cdc_') || key.startsWith('$cdc_') || key.startsWith('__webdriver')) {
+            delete window[key];
+        }
+    });
+
+    // 删除 document 上的自动化属性
+    delete document.__webdriver_script_fn;
+    delete document.$cdc_asdjflasutopfhvcZLmcfl_;
+    delete document.cdc_adoQpoasnfa76pfcZLmcfl_;
+
+    // 覆盖 navigator.webdriver 的 toString
+    Object.defineProperty(Object.getPrototypeOf(navigator), 'webdriver', {
+        get: () => false,
+        configurable: true,
+        enumerable: true
+    });
     
     // 注入 window.chrome 对象
     if (!window.chrome) {
@@ -257,8 +291,19 @@ STEALTH_SCRIPTS = """
         };
     }
     
+    // 覆盖 navigator.platform 以匹配 User-Agent
+    window.__stealth_step = 100;
+    window.__platform_before = navigator.platform;
+    Object.defineProperty(Navigator.prototype, 'platform', {
+        get: () => "Win32",
+        configurable: true,
+        enumerable: true
+    });
+    window.__platform_after = navigator.platform;
+    window.__stealth_step = 101;
+
     // 覆盖 navigator.languages
-    Object.defineProperty(navigator, 'languages', {
+    Object.defineProperty(Navigator.prototype, 'languages', {
         get: () => ["zh-CN", "zh", "en-US", "en"],
         configurable: true
     });
@@ -317,6 +362,54 @@ STEALTH_SCRIPTS = """
             return;
         }
         return originalConsoleDebug.apply(this, arguments);
+    };
+
+    // 绕过 CDP Runtime 检测
+    if (window.chrome && window.chrome.runtime) {
+        // 确保 chrome.runtime.connect 存在
+        if (!window.chrome.runtime.connect) {
+            window.chrome.runtime.connect = function() {
+                return {
+                    onMessage: { addListener: function() {} },
+                    postMessage: function() {},
+                    disconnect: function() {}
+                };
+            };
+        }
+        // 确保 chrome.runtime.sendMessage 存在
+        if (!window.chrome.runtime.sendMessage) {
+            window.chrome.runtime.sendMessage = function() {};
+        }
+    }
+
+    // 覆盖 Error.stack 以隐藏自动化痕迹
+    const OriginalError = Error;
+    Error = function(...args) {
+        const err = new OriginalError(...args);
+        const originalStack = err.stack;
+        Object.defineProperty(err, 'stack', {
+            get: function() {
+                return originalStack ? originalStack.replace(/at .*automation.*/gi, '') : originalStack;
+            },
+            configurable: true
+        });
+        return err;
+    };
+    Error.prototype = OriginalError.prototype;
+
+    // 修复 Function.toString 以隐藏代理
+    const originalFunctionToString = Function.prototype.toString;
+    Function.prototype.toString = function() {
+        if (this === navigator.permissions.query) {
+            return 'function query() { [native code] }';
+        }
+        if (this === HTMLCanvasElement.prototype.toDataURL) {
+            return 'function toDataURL() { [native code] }';
+        }
+        if (this === HTMLCanvasElement.prototype.getContext) {
+            return 'function getContext() { [native code] }';
+        }
+        return originalFunctionToString.apply(this, arguments);
     };
     
     // 添加假的 plugins 刷新
@@ -419,31 +512,54 @@ class BrowserManager:
         # 反检测参数 - 隐藏自动化特征，避免被识别为机器人
         browser_args.extend(
             [
+                # 核心反检测参数
                 "--disable-blink-features=AutomationControlled",
+                "--exclude-switches=enable-automation",
+                "--disable-automation",
+                # 安全和隔离
                 "--disable-web-security",
                 "--disable-features=IsolateOrigins,site-per-process,AutomationControlled",
+                "--disable-site-isolation-trials",
+                # 渲染和性能
                 "--disable-software-rasterizer",
                 "--disable-logging",
                 "--log-level=3",
+                # 调试端口
                 "--remote-debugging-port=0",
+                # 后台服务
                 "--disable-background-networking",
+                "--disable-background-timer-throttling",
+                "--disable-backgrounding-occluded-windows",
+                "--disable-breakpad",
+                "--disable-client-side-phishing-detection",
+                "--disable-component-update",
                 "--disable-default-apps",
+                "--disable-domain-reliability",
+                "--disable-features=TranslateUI",
+                "--disable-hang-monitor",
+                "--disable-ipc-flooding-protection",
+                "--disable-prompt-on-repost",
+                "--disable-renderer-backgrounding",
                 "--disable-sync",
                 "--disable-translate",
+                # 指标和遥测
                 "--metrics-recording-only",
+                "--no-report-upload",
                 "--mute-audio",
                 "--no-first-run",
                 "--safebrowsing-disable-auto-update",
-                # 启用 WebGL 支持
+                # WebGL 支持
                 "--enable-webgl",
                 "--enable-features=WebGL,WebGL2",
-                # 禁用自动化提示
+                "--use-gl=swiftshader",
+                # 自动化提示
                 "--disable-infobars",
                 "--disable-popup-blocking",
+                "--disable-notifications",
                 # 窗口大小和位置
                 "--window-size=1920,1080",
                 "--window-position=0,0",
-                # 禁用自动化扩展
+                # 扩展
                 "--disable-extensions-except=",
                 "--disable-component-extensions-with-background-pages",
                 # 用户代理相关
@@ -452,6 +568,12 @@ class BrowserManager:
                 # 内存和性能
                 "--memory-model=low",
                 "--max_old_space_size=4096",
+                # 额外的反检测参数
+                "--disable-blink-features=AutomationControlled",
+                "--disable-dev-shm-usage",
+                "--no-zygote",
+                "--disable-accelerated-2d-canvas",
+                "--disable-gpu-sandbox",
             ]
         )
 
@@ -481,10 +603,13 @@ class BrowserManager:
                 "locale": "zh-CN",
                 "timezone_id": "Asia/Shanghai",
                 "geolocation": {"latitude": 39.9042, "longitude": 116.4074},  # 北京
-                "permissions": [],
+                "permissions": ["geolocation", "notifications"],
                 "color_scheme": "light",
                 "reduced_motion": "no-preference",
                 "forced_colors": "none",
+                # 添加额外的反检测选项
+                "ignore_default_args": ["--enable-automation", "--enable-blink-features=AutomationControlled"],
+                "bypass_csp": True,  # 绕过内容安全策略
             }
 
             # 添加可执行路径（如果指定）
@@ -498,19 +623,44 @@ class BrowserManager:
             # launch_persistent_context 返回的是 context，不是 browser
             self.context = self.browser
 
+            # 在 context 级别注入反检测脚本（对所有新页面生效）
+            print(f"[DEBUG] Adding init script to context...")
+
+            # 简化的反检测脚本 - 只包含关键修复
+            SIMPLE_STEALTH = """
+Object.defineProperty(Navigator.prototype, 'webdriver', {
+    get: () => false,
+    configurable: true,
+    enumerable: true
+});
+
+Object.defineProperty(Navigator.prototype, 'platform', {
+    get: () => 'Win32',
+    configurable: true,
+    enumerable: true
+});
+
+Object.defineProperty(Navigator.prototype, 'languages', {
+    get: () => ['zh-CN', 'zh', 'en-US', 'en'],
+    configurable: true
+});
+"""
+            await self.context.add_init_script(SIMPLE_STEALTH)
+            print(f"[DEBUG] Init script added successfully")
+
             self._running = True
 
-            # 为所有页面添加反检测脚本
+            # 为所有页面添加反检测脚本（必须在处理现有页面之前注册）
             self.context.on("page", self._on_page_created)
 
-            # 创建第一个标签页（如果使用 persistent context，可能已经有一个页面了）
+            # 为现有页面注册（persistent context 可能已经有页面了）
             pages = self.context.pages
             if pages:
-                page = pages[0]
-                await self._inject_stealth_scripts(page)
+                # 不需要 reload，脚本会在下次导航时自动注入
+                await self.tab_manager.create_tab(pages[0])
             else:
                 page = await self.context.new_page()
-            await self.tab_manager.create_tab(page)
+                await self.tab_manager.create_tab(page)
 
             return True
 
@@ -565,9 +715,12 @@ class BrowserManager:
         try:
             # 在页面加载前注入脚本
             await page.add_init_script(STEALTH_SCRIPTS)
-        except Exception:
-            # 忽略注入失败的错误
-            pass
+            print(f"[DEBUG] Stealth script injected to page: {page.url}")
+        except Exception as e:
+            # 打印注入失败的错误
+            print(f"[ERROR] Failed to inject stealth script: {e}")
+            import traceback
+            traceback.print_exc()
 
     def get_status(self) -> dict[str, Any]:
         """获取浏览器状态"""

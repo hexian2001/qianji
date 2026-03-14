@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**Universal Browser Automation for AI - 100% OpenClaw Compatible**
+**Universal Browser Automation for AI**
 
 Qianji is an enterprise-grade browser automation tool designed for AI agents, developers, and automation workflows. It provides a robust HTTP API, CLI tool, and MCP (Model Context Protocol) support.
 
@@ -23,6 +23,7 @@ Qianji is an enterprise-grade browser automation tool designed for AI agents, de
 - 🍪 **Storage Management** - Cookies, localStorage, sessionStorage
 - 🐛 **Debug Tools** - Console logs, network requests, errors
 - 🔒 **Enterprise Ready** - Structured logging, error handling, tests
+- 🛡️ **CAPTCHA Bypass** - Enhanced human verification evasion with stealth mode
 
 ## 🚀 Quick Start
 
@@ -211,7 +212,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Playwright](https://playwright.dev/) - Browser automation library
 - [FastAPI](https://fastapi.tiangolo.com/) - Web framework
-- [OpenClaw](https://github.com/efritz/openclaw) - API compatibility inspiration
+- [OpenClaw](https://github.com/efritz/openclaw) - browser automation design reference
 
 ## 📞 Support
 
